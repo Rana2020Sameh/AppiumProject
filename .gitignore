@@ -36,5 +36,9 @@ build/
 .vscode/
 
 ### Mac OS ###
-.DS_Store*.apk
+.DS_Store
+**/.DS_Store
 *.apk
+
+### Claude / AI ###
+.ai/

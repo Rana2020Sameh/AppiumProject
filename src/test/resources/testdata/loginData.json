@@ -1,0 +1,17 @@
+[
+  {
+    "email": "ranatest@gmail.com",
+    "password": "Aa@12345",
+    "expectedResult": "success"
+  },
+  {
+    "email": "wronguser@gmail.com",
+    "password": "WrongPass123",
+    "expectedResult": "failure"
+  },
+  {
+    "email": "",
+    "password": "",
+    "expectedResult": "failure"
+  }
+]

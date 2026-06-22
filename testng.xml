@@ -23,6 +23,15 @@
                 <include name="signUp"/>
             </methods>
         </class>
+            <class name="tests.FormsTests">
+                <methods>
+                    <include name="validateTextInputReflectsTypedText"/>
+                    <include name="validateToggleSwitchBecomesActive"/>
+                    <include name="validateToggleSwitchBecomesInactive"/>
+                    <include name="validateDropdownSelectionAppium"/>
+                    <include name="validateDropdownSelectionCucumber"/>
+                </methods>
+            </class>
         </classes>
     </test>
 </suite>

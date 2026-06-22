@@ -3,12 +3,12 @@ package pages;
 import io.appium.java_client.AppiumDriver;
 import io.appium.java_client.pagefactory.iOSXCUITFindBy;
 import org.openqa.selenium.WebElement;
-
 public class SidemenuPage extends BasePage{
     public SidemenuPage(AppiumDriver driver)
     {
         super(driver);
     }
+
     @iOSXCUITFindBy (accessibility = "Menu")
     private WebElement sidemenuButton;
     @iOSXCUITFindBy (accessibility = "side-menu-item-home")
@@ -33,14 +33,30 @@ public class SidemenuPage extends BasePage{
     private WebElement staricon;
 @iOSXCUITFindBy(xpath = "(//XCUIElementTypeStaticText[@name=\"WEBDRIVER\"])[2]")
 private WebElement textinHome;
-public  void pressHomeScreen()
-{
+public void pressHomeScreen() {
     sidemenuButton.click();
     home.click();
-    String nam=textinHome.getText();
-    System.out.printf("you are in Home",nam);
-
+    String nam = textinHome.getText();
+    System.out.printf("you are in Home: %s%n", nam);
 }
 
+public void navigateToForms() {
+    sidemenuButton.click();
+    forms.click();
+}
 
+public void navigateToSwipe() {
+    sidemenuButton.click();
+    swipe.click();
+}
+
+public void navigateToWebView() {
+    sidemenuButton.click();
+    webView.click();
+}
+
+public void navigateToDrag() {
+    sidemenuButton.click();
+    drag.click();
+}
 }

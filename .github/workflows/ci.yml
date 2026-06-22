@@ -1,10 +1,15 @@
 name: Appium iOS CI
 
 on:
+  schedule:
+    - cron: '0 22 * * *' # Runs daily at 10pm
   push:
     branches: [ main, master ]
   pull_request:
     branches: [ main, master ]
+    types:
+      [opened, synchronize, reopened]
+
   workflow_dispatch:
 
 jobs:

@@ -2,42 +2,40 @@ package tests;
 
 import core.DriverManager;
 import io.appium.java_client.AppiumDriver;
+import org.openqa.selenium.NoSuchElementException;
+import org.openqa.selenium.StaleElementReferenceException;
+import org.openqa.selenium.support.ui.FluentWait;
+import org.openqa.selenium.support.ui.Wait;
 import org.openqa.selenium.support.ui.WebDriverWait;
 import org.testng.Assert;
-import org.testng.annotations.*;
+import org.testng.annotations.BeforeClass;
+import org.testng.annotations.BeforeTest;
 import org.testng.asserts.SoftAssert;
 
 import java.net.MalformedURLException;
 import java.time.Duration;
 
 public class BaseTests {
-protected AppiumDriver driver;
-    SoftAssert soft=new SoftAssert();
-@BeforeClass
+
+    protected AppiumDriver driver;
+    protected SoftAssert soft = new SoftAssert();
+    protected WebDriverWait wait;
+    protected Wait<AppiumDriver> waitFluent;
+
+    @BeforeClass
     public void setUp() throws MalformedURLException {
-    driver= DriverManager.initializeDriver("ios");
-    Assert.assertNotNull(driver);
-    WebDriverWait wait=new WebDriverWait(driver, Duration.ofSeconds(60));
+        driver = DriverManager.initializeDriver("ios");
+        Assert.assertNotNull(driver, "Driver failed to initialize");
+        wait = new WebDriverWait(driver, Duration.ofSeconds(60));
+        waitFluent = new FluentWait<>(driver)
+                .withTimeout(Duration.ofSeconds(30))
+                .pollingEvery(Duration.ofSeconds(3))
+                .ignoring(NoSuchElementException.class)
+                .ignoring(StaleElementReferenceException.class);
+    }
 
-
-
-}
-
-@BeforeTest
-        public  void beforeeachTest()
-{
-System.out.println("beforeeachclassTest turn on your mobile");
-}
-/*    @AfterTest
-    public  void aftereachTest()
-    {
-        System.out.println("beforeeachclassTest turn off your mobile");
-    }*/
-//@AfterClass
-//    public void treatdown()
-//{
-//    if (driver != null) {
-//        driver.quit();
-//    }
-//}
+    @BeforeTest
+    public void beforeEachTest() {
+        System.out.println("Before each test - ensure device is ready");
+    }
 }
