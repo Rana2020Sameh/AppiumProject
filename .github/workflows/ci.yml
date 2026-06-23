@@ -1,4 +1,4 @@
-name: Appium iOS CI
+name: Appium iOS
 
 on:
   schedule:
@@ -12,11 +12,7 @@ on:
 
 jobs:
   test:
-    name: Run iOS Appium Tests
-    # macos-latest migrated to macOS 26 on June 15 2026.
-    # macOS 26 has breaking changes in simulator runtimes that cause
-    # xcrun simctl bootstatus to hang and receive SIGTSTP (exit 148) in CI.
-    # Pin to macos-15 which has stable, pre-installed iOS simulator runtimes.
+    name: Run Appium on IOS
     runs-on: macos-15
     timeout-minutes: 60
 
@@ -34,7 +30,7 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '22' # Node 22 LTS — avoids the Node 20 deprecation warning
+          node-version: '22'
 
       - name: Install Appium & XCUITest driver
         run: |
