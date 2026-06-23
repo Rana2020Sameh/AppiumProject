@@ -47,10 +47,10 @@ public class DriverManager {
             options.setUdid(getConfig("SIMULATOR_UDID",    "iosUdid"));
             options.setApp(getConfig("APP_PATH",           "iosApp"));
             options.setNewCommandTimeout(Duration.ofSeconds(3600));
-            // fullReset=true on the single suite-level session ensures a clean
-            // app install. With the shared-driver architecture there is only one
-            // session, so the simulator restart overhead happens exactly once.
-            options.setFullReset(true);
+            // No fullReset: the CI "Boot iOS Simulator" step already provides a
+            // clean simulator. fullReset shuts it down and restarts it, causing
+            // a 135s+ boot timeout. App state is reset between classes via
+            // mobile: terminateApp / mobile: launchApp in BaseTests.resetApp().
 
             return new IOSDriver(
                     new URL(getConfig("APPIUM_URL", "appiumUrl")),
