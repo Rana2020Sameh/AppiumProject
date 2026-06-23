@@ -47,9 +47,10 @@ public class DriverManager {
             options.setUdid(getConfig("SIMULATOR_UDID",    "iosUdid"));
             options.setApp(getConfig("APP_PATH",           "iosApp"));
             options.setNewCommandTimeout(Duration.ofSeconds(3600));
-            // fullReset removed: CI runner starts with a fresh simulator each run.
-            // fullReset triggers a full simulator shutdown/restart which causes
-            // 149s+ boot waits and WDA port conflicts between test classes.
+            // fullReset=true on the single suite-level session ensures a clean
+            // app install. With the shared-driver architecture there is only one
+            // session, so the simulator restart overhead happens exactly once.
+            options.setFullReset(true);
 
             return new IOSDriver(
                     new URL(getConfig("APPIUM_URL", "appiumUrl")),

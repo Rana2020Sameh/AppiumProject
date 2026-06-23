@@ -8,10 +8,10 @@ import org.openqa.selenium.support.ui.FluentWait;
 import org.openqa.selenium.support.ui.Wait;
 import org.openqa.selenium.support.ui.WebDriverWait;
 import org.testng.Assert;
-import org.testng.annotations.AfterClass;
+import org.testng.annotations.AfterSuite;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeMethod;
-import org.testng.annotations.BeforeTest;
+import org.testng.annotations.BeforeSuite;
 import org.testng.asserts.SoftAssert;
 
 import java.net.MalformedURLException;
@@ -19,25 +19,46 @@ import java.time.Duration;
 
 public class BaseTests {
 
-    protected AppiumDriver driver;
+    // Single shared driver for the entire suite — WDA builds only once.
+    protected static AppiumDriver driver;
+    protected static WebDriverWait wait;
+    protected static Wait<AppiumDriver> waitFluent;
     protected SoftAssert soft = new SoftAssert();
-    protected WebDriverWait wait;
-    protected Wait<AppiumDriver> waitFluent;
 
-    @BeforeClass
-    public void setUp() throws MalformedURLException {
-        driver = DriverManager.initializeDriver("ios");
-        Assert.assertNotNull(driver, "Driver failed to initialize");
-        wait = new WebDriverWait(driver, Duration.ofSeconds(60));
-        waitFluent = new FluentWait<>(driver)
-                .withTimeout(Duration.ofSeconds(30))
-                .pollingEvery(Duration.ofSeconds(3))
-                .ignoring(NoSuchElementException.class)
-                .ignoring(StaleElementReferenceException.class);
+    static final String APP_BUNDLE_ID = "org.reactjs.native.example.wdioDemoApp";
+
+    /**
+     * Creates the Appium session once for the entire suite.
+     * WDA is built and started only here — no repeated startups between classes.
+     */
+    @BeforeSuite
+    public synchronized void setUpSuite() throws MalformedURLException {
+        if (driver == null) {
+            driver = DriverManager.initializeDriver("ios");
+            Assert.assertNotNull(driver, "Driver failed to initialize");
+            wait = new WebDriverWait(driver, Duration.ofSeconds(60));
+            waitFluent = new FluentWait<>(driver)
+                    .withTimeout(Duration.ofSeconds(30))
+                    .pollingEvery(Duration.ofSeconds(3))
+                    .ignoring(NoSuchElementException.class)
+                    .ignoring(StaleElementReferenceException.class);
+        }
     }
 
-    @AfterClass
-    public void tearDown() {
+    /**
+     * Resets the app to its initial state before each test class.
+     * Much faster than a new Appium session — just terminates and relaunches the app.
+     */
+    @BeforeClass
+    public void setUp() {
+        resetApp();
+    }
+
+    /**
+     * Quits the driver once at the end of the entire suite.
+     */
+    @AfterSuite
+    public void tearDownSuite() {
         if (driver != null) {
             driver.quit();
             driver = null;
@@ -49,8 +70,14 @@ public class BaseTests {
         soft = new SoftAssert();
     }
 
-    @BeforeTest
-    public void beforeEachTest() {
-        System.out.println("Before each test - ensure device is ready");
+    protected void resetApp() {
+        try {
+            driver.terminateApp(APP_BUNDLE_ID);
+            Thread.sleep(1000);
+            driver.activateApp(APP_BUNDLE_ID);
+            Thread.sleep(2000); // wait for app to fully load
+        } catch (Exception e) {
+            System.out.println("Warning: could not reset app state: " + e.getMessage());
+        }
     }
 }
