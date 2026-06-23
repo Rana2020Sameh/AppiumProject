@@ -16,6 +16,8 @@ import org.testng.asserts.SoftAssert;
 
 import java.net.MalformedURLException;
 import java.time.Duration;
+import java.util.HashMap;
+import java.util.Map;
 
 public class BaseTests {
 
@@ -72,9 +74,11 @@ public class BaseTests {
 
     protected void resetApp() {
         try {
-            driver.terminateApp(APP_BUNDLE_ID);
+            Map<String, Object> args = new HashMap<>();
+            args.put("bundleId", APP_BUNDLE_ID);
+            driver.executeScript("mobile: terminateApp", args);
             Thread.sleep(1000);
-            driver.activateApp(APP_BUNDLE_ID);
+            driver.executeScript("mobile: launchApp", args);
             Thread.sleep(2000); // wait for app to fully load
         } catch (Exception e) {
             System.out.println("Warning: could not reset app state: " + e.getMessage());
