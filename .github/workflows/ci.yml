@@ -35,9 +35,7 @@ jobs:
       - name: Install Appium & XCUITest driver
         run: |
           npm install -g appium
-          # --yes suppresses any interactive "do you want to install?" prompts
-          # which would suspend the process (SIGTSTP) in a non-interactive CI shell
-          appium driver install xcuitest --yes
+          appium driver install xcuitest
 
       - name: Start Appium server
         run: |
