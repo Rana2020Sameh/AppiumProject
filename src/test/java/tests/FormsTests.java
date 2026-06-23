@@ -36,10 +36,9 @@ public class FormsTests extends BaseTests {
         soft.assertAll();
     }
 
-    @Test
+    @Test(dependsOnMethods = "validateToggleSwitchBecomesActive")
     public void validateToggleSwitchBecomesInactive() {
-        // Tap twice: first ON, then OFF
-        formsPage.tapToggleSwitch();
+        // Toggle is currently ON after validateToggleSwitchBecomesActive — tap once to turn OFF
         formsPage.tapToggleSwitch();
         boolean inactive = formsPage.isInactiveLabelDisplayed();
         System.out.println("Toggle inactive label displayed: " + inactive);

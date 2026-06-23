@@ -9,6 +9,7 @@ import org.openqa.selenium.support.ui.Wait;
 import org.openqa.selenium.support.ui.WebDriverWait;
 import org.testng.Assert;
 import org.testng.annotations.BeforeClass;
+import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.BeforeTest;
 import org.testng.asserts.SoftAssert;
 
@@ -32,6 +33,11 @@ public class BaseTests {
                 .pollingEvery(Duration.ofSeconds(3))
                 .ignoring(NoSuchElementException.class)
                 .ignoring(StaleElementReferenceException.class);
+    }
+
+    @BeforeMethod
+    public void resetSoftAssert() {
+        soft = new SoftAssert();
     }
 
     @BeforeTest
