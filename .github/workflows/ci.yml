@@ -2,14 +2,12 @@ name: Appium iOS CI
 
 on:
   schedule:
-    - cron: '0 22 * * *' # Runs daily at 10pm
+    - cron: '0 22 * * *' # Runs daily at 10pm UTC
   push:
     branches: [ main, master ]
   pull_request:
     branches: [ main, master ]
-    types:
-      [opened, synchronize, reopened]
-
+    types: [opened, synchronize, reopened]
   workflow_dispatch:
 
 jobs:
@@ -41,19 +39,77 @@ jobs:
       - name: Start Appium server
         run: |
           appium --log appium.log &
-          sleep 5
+          # Poll until Appium is ready instead of a fixed sleep.
+          # Appium /status returns {"ready":true} when it can accept sessions.
+          echo "Waiting for Appium to be ready..."
+          for i in $(seq 1 20); do
+            if curl -sf http://127.0.0.1:4723/status | grep -q '"ready":true'; then
+              echo "Appium ready after ~$((i * 3))s"
+              break
+            fi
+            if [ "$i" -eq 20 ]; then
+              echo "Appium did not start in time. Printing log:"
+              cat appium.log
+              exit 1
+            fi
+            sleep 3
+          done
 
       - name: Boot iOS Simulator
         run: |
-          UDID=$(xcrun simctl list devices available | grep "iPhone 15" | head -1 | grep -oE '\([-A-F0-9]+\)' | tr -d '()')
-          echo "SIMULATOR_UDID=$UDID" >> $GITHUB_ENV
-          xcrun simctl boot "$UDID" || true
-          xcrun simctl bootstatus "$UDID" -b
+          # Prefer iPhone 16 Pro (matches config default), fall back to any available iPhone.
+          SIMULATOR_LINE=$(xcrun simctl list devices available | grep "iPhone 16 Pro" | grep -v "Max\|Plus" | head -1)
+          if [ -z "$SIMULATOR_LINE" ]; then
+            SIMULATOR_LINE=$(xcrun simctl list devices available | grep "iPhone 16" | head -1)
+          fi
+          if [ -z "$SIMULATOR_LINE" ]; then
+            SIMULATOR_LINE=$(xcrun simctl list devices available | grep "iPhone 15" | head -1)
+          fi
+          if [ -z "$SIMULATOR_LINE" ]; then
+            SIMULATOR_LINE=$(xcrun simctl list devices available | grep "iPhone" | head -1)
+          fi
+
+          if [ -z "$SIMULATOR_LINE" ]; then
+            echo "ERROR: No iPhone simulator found. Available devices:"
+            xcrun simctl list devices available
+            exit 1
+          fi
+
+          # Extract UDID (the hex string inside parentheses) and device name.
+          UDID=$(echo "$SIMULATOR_LINE" | grep -oE '\([A-F0-9-]{36}\)' | tr -d '()')
+          DEVICE_NAME=$(echo "$SIMULATOR_LINE" | sed 's/ ([^)]*) (.*//' | sed 's/^[[:space:]]*//')
+
+          echo "Booting simulator: $DEVICE_NAME  UDID=$UDID"
+
+          # Export to subsequent steps via GITHUB_ENV.
+          echo "SIMULATOR_UDID=$UDID"       >> "$GITHUB_ENV"
+          echo "DEVICE_NAME=$DEVICE_NAME"   >> "$GITHUB_ENV"
+
+          xcrun simctl boot "$UDID" || true   # 'Already booted' is not an error.
+          xcrun simctl bootstatus "$UDID" -b  # Blocks until the simulator is fully up.
+
+      - name: Set app path
+        run: |
+          # Use the simulator build that is committed to the repo.
+          # 'wdiodemoapp 2.app' is NOT tracked in git so it won't exist after checkout.
+          # Switch to iOS-Simulator-NativeDemoApp-0.2.1.app which IS committed.
+          APP="${GITHUB_WORKSPACE}/Apps/iOS-Simulator-NativeDemoApp-0.2.1.app"
+          if [ ! -d "$APP" ]; then
+            echo "ERROR: App bundle not found at $APP"
+            ls "${GITHUB_WORKSPACE}/Apps/"
+            exit 1
+          fi
+          echo "APP_PATH=$APP" >> "$GITHUB_ENV"
 
       - name: Build & run tests
         run: mvn test -DsuiteXmlFile=testng.xml
         env:
+          # These env vars are picked up by DriverManager.getConfig() and
+          # take priority over the values in config.properties.
           SIMULATOR_UDID: ${{ env.SIMULATOR_UDID }}
+          DEVICE_NAME:    ${{ env.DEVICE_NAME }}
+          APP_PATH:       ${{ env.APP_PATH }}
+          APPIUM_URL:     http://127.0.0.1:4723
 
       - name: Upload Appium logs on failure
         if: failure()

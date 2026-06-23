@@ -27,24 +27,33 @@ public class DriverManager {
         }
     }
 
+    /**
+     * Returns the value of an environment variable if set and non-empty,
+     * otherwise falls back to the matching key in config.properties.
+     * This lets CI override local settings without touching source files.
+     */
+    private static String getConfig(String envKey, String propKey) {
+        String envVal = System.getenv(envKey);
+        return (envVal != null && !envVal.trim().isEmpty()) ? envVal : pro.getProperty(propKey);
+    }
+
     public static AppiumDriver initializeDriver(String platform) throws MalformedURLException {
 
         if (platform.equalsIgnoreCase("ios")) {
             XCUITestOptions options = new XCUITestOptions();
             options.setPlatformName("iOS");
             options.setAutomationName("XCUITest");
-            options.setDeviceName(pro.getProperty("iosDeviceName"));
-            options.setUdid(pro.getProperty("iosUdid"));               // simulator UDID
-            options.setApp((pro.getProperty("iosApp")));
+            options.setDeviceName(getConfig("DEVICE_NAME",  "iosDeviceName"));
+            options.setUdid(getConfig("SIMULATOR_UDID",    "iosUdid"));
+            options.setApp(getConfig("APP_PATH",           "iosApp"));
             options.setNewCommandTimeout(Duration.ofSeconds(3600));
             options.setFullReset(true);
 
             return new IOSDriver(
-                    new URL(pro.getProperty("appiumUrl")),
+                    new URL(getConfig("APPIUM_URL", "appiumUrl")),
                     options
             );
         }
-
 
         return null;
     }
